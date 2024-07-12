@@ -49,7 +49,7 @@ spec:
                 - rndc
                 - status
         - name: netbox-dns-sidecar
-          image: ghcr.io/siticom/bind9-netbox-dns-sidecar
+          image: ghcr.io/siticom/bind9-netbox-dns-sidecar:sha-e290ea5
           imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:
@@ -83,7 +83,7 @@ spec:
               port: webhook
       initContainers:
         - name: netbox-dns-init
-          image: ghcr.io/siticom/bind9-netbox-dns-sidecar
+          image: ghcr.io/siticom/bind9-netbox-dns-sidecar:sha-e290ea5
           imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:
