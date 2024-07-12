@@ -17,6 +17,8 @@ spec:
         - name: bind9
           image: docker.io/ubuntu/bind9:9.18-22.04_beta
           imagePullPolicy: IfNotPresent
+          securityContext:
+            readOnlyRootFilesystem: true
           resources:
             limits:
               memory: "256Mi"
