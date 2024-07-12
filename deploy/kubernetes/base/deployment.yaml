@@ -46,8 +46,8 @@ spec:
               command:
                 - rndc
                 - status
-        - name: ansible-webhook
-          image: localhost/ansible
+        - name: netbox-dns-sidecar
+          image: ghcr.io/siticom/bind9-netbox-dns-sidecar
           imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:
@@ -80,8 +80,8 @@ spec:
               path: /
               port: webhook
       initContainers:
-        - name: ansible
-          image: localhost/ansible
+        - name: netbox-dns-init
+          image: ghcr.io/siticom/bind9-netbox-dns-sidecar
           imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:
