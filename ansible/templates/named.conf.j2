@@ -1,0 +1,33 @@
+// {{ ansible_managed }}
+
+include "/etc/bind/rndc.key";
+
+options {
+  directory "/var/cache/bind";
+  listen-on { any; };
+  allow-query { any; };
+  allow-recursion { any; };
+  allow-transfer { none; };
+  max-cache-size 10m;
+  max-cache-ttl 86400;
+  max-ncache-ttl 0;
+  dnssec-validation no;
+};
+
+controls {
+	inet 127.0.0.1 port 953
+		allow { 127.0.0.1; } keys { "rndc-key"; };
+};
+
+statistics-channels {
+  inet 127.0.0.1 port 8053 allow { 127.0.0.1; };
+};
+
+{% for zone in nameserver.zones -%}
+zone "{{ zone.name }}" {
+  type master;
+  file "/etc/bind/zones/{{ zone.name }}.zone";
+  allow-update { none; };
+};
+
+{% endfor %}

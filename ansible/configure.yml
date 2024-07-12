@@ -1,0 +1,68 @@
+- name: Configure bind9 nameserver
+  hosts: localhost
+  vars:
+    # set NETBOX_URL and NETBOX_TOKEN via environment variables
+    netbox_dns_nameserver: "{{ lookup('ansible.builtin.env', 'NETBOX_DNS_NAMESERVER') }}"
+  handlers:
+    - name: Reload bind9
+      ansible.builtin.command: rndc reload
+      when: "'reload' in ansible_run_tags"
+  tasks:
+    - name: Get nameserver
+      ansible.builtin.set_fact:
+        nameserver: "{{ query('netbox.netbox.nb_lookup', 'nameservers', plugin='netbox_dns',
+                          api_filter='name='+netbox_dns_nameserver)
+                        | map(attribute='value') | first }}"
+      tags: reload
+
+    - name: Create zones directory
+      ansible.builtin.file:
+        path: /etc/bind/zones
+        state: directory
+        mode: "0750"
+        owner: root
+        group: 101
+
+    - name: Generate zone files
+      ansible.builtin.template:
+        src: zone.db.j2
+        dest: "/etc/bind/zones/{{ zone.name }}.zone"
+        mode: "0640"
+        owner: root
+        group: 101
+      vars:
+        zone: "{{ query('netbox.netbox.nb_lookup', 'zones', plugin='netbox_dns',
+                            api_filter='id='+(item.id | string))
+                          | first }}"
+        records: "{{ query('netbox.netbox.nb_lookup', 'records', plugin='netbox_dns',
+                            api_filter='zone_id='+(item.id | string))
+                          | map(attribute='value') }}"
+      when: item.status == "active"
+      loop: "{{ nameserver.zones }}"
+      loop_control:
+        label: "{{ item.name }}"
+      notify: Reload bind9
+      tags: reload
+
+    - name: Generate rndc key
+      ansible.builtin.command: rndc-confgen -a -c /etc/bind/rndc.key
+      args:
+        creates: /etc/bind/rndc.key
+
+    - name: Configure rndc key permissions
+      ansible.builtin.file:
+        path: /etc/bind/rndc.key
+        mode: "0640"
+        owner: root
+        group: 101
+
+    - name: Configure bind9
+      ansible.builtin.template:
+        src: named.conf.j2
+        dest: /etc/bind/named.conf
+        mode: "0640"
+        owner: root
+        group: 101
+        validate: named-checkconf %s
+      notify: Reload bind9
+      tags: reload

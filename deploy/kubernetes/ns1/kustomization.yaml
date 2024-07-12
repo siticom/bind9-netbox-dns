@@ -1,0 +1,15 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../base
+  - secrets.yaml
+namespace: dns
+commonLabels:
+  app.kubernetes.io/name: bind9
+  app.kubernetes.io/instance: ns1
+namePrefix: ns1-
+configMapGenerator:
+  - name: bind9-netbox-config
+    literals:
+      - NETBOX_URL=http://netbox.netbox.svc.cluster.local/
+      - NETBOX_DNS_NAMESERVER=ns1.example.com

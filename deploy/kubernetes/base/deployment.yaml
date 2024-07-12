@@ -1,0 +1,109 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bind9
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: bind9
+      app.kubernetes.io/instance: ns
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: bind9
+        app.kubernetes.io/instance: ns
+    spec:
+      containers:
+        - name: bind9
+          image: docker.io/ubuntu/bind9:9.18-22.04_beta
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              memory: "256Mi"
+              cpu: "100m"
+          ports:
+            - containerPort: 53
+              name: dns-tcp
+              protocol: TCP
+            - containerPort: 53
+              name: dns-udp
+              protocol: UDP
+          env:
+            - name: TZ
+              value: Europe/Berlin
+          volumeMounts:
+            - name: config
+              mountPath: /etc/bind
+            - name: cache
+              mountPath: /var/cache/bind
+          livenessProbe:
+            exec:
+              command:
+                - rndc
+                - status
+          readinessProbe:
+            exec:
+              command:
+                - rndc
+                - status
+        - name: ansible-webhook
+          image: localhost/ansible
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: bind9-netbox-config
+          env:
+            - name: NETBOX_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: bind9-netbox-api-token
+                  key: token
+          resources:
+            limits:
+              memory: "256Mi"
+              cpu: "250m"
+          ports:
+            - containerPort: 9000
+              name: webhook
+              protocol: TCP
+          volumeMounts:
+            - name: config
+              mountPath: /etc/bind
+            - name: cache
+              mountPath: /var/cache/bind
+          livenessProbe:
+            httpGet:
+              path: /
+              port: webhook
+          readinessProbe:
+            httpGet:
+              path: /
+              port: webhook
+      initContainers:
+        - name: ansible
+          image: localhost/ansible
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: bind9-netbox-config
+          env:
+            - name: NETBOX_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: bind9-netbox-api-token
+                  key: token
+          command: ["ansible-playbook", "configure.yml"]
+          resources:
+            limits:
+              memory: "256Mi"
+              cpu: "250m"
+          volumeMounts:
+            - name: config
+              mountPath: /etc/bind
+            - name: cache
+              mountPath: /var/cache/bind
+      volumes:
+        - name: config
+          emptyDir: {}
+        - name: cache
+          emptyDir: {}
