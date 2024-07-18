@@ -6,7 +6,7 @@ options {
   directory "/var/cache/bind";
   listen-on { any; };
   allow-query { any; };
-  allow-recursion { any; };
+  allow-recursion { none; };
   allow-transfer { none; };
   max-cache-size 10m;
   max-cache-ttl 86400;
