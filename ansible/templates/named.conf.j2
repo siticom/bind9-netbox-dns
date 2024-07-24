@@ -7,7 +7,7 @@ options {
   listen-on { any; };
   allow-query { any; };
   allow-recursion { none; };
-  allow-transfer { none; };
+  allow-transfer { {{ bind9_allow_transfer | split(',') | join('; ') }}; };
   max-cache-size 10m;
   max-cache-ttl 86400;
   max-ncache-ttl 0;

@@ -4,6 +4,7 @@
   vars:
     # set NETBOX_URL and NETBOX_TOKEN via environment variables
     netbox_dns_nameserver: "{{ lookup('ansible.builtin.env', 'NETBOX_DNS_NAMESERVER') }}"
+    bind9_allow_transfer: "{{ lookup('ansible.builtin.env', 'BIND9_ALLOW_TRANSFER', default='none') }}"
   handlers:
     - name: Reload bind9
       ansible.builtin.command: rndc reload
