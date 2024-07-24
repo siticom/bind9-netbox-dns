@@ -1,6 +1,6 @@
 FROM docker.io/python:3.12-alpine
 
-RUN apk add --no-cache bind webhook build-base libffi-dev
+RUN apk add --no-cache bind webhook build-base libffi-dev s6
 
 RUN pip install --upgrade pip \
     && pip install ansible pynetbox
