@@ -1,5 +1,6 @@
 - name: Configure bind9 nameserver
   hosts: localhost
+  gather_facts: false
   vars:
     # set NETBOX_URL and NETBOX_TOKEN via environment variables
     netbox_dns_nameserver: "{{ lookup('ansible.builtin.env', 'NETBOX_DNS_NAMESERVER') }}"
